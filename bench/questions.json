@@ -1,0 +1,14 @@
+{
+  "about": "The kinds of question agents answer by hand about Omarchy with its commands and files: which command does a job, which file holds a setting and which one wins, what a stock theme's colours are, whether Omarchy's own files may be edited, and whether an app project follows the Omarchy app conventions. The answers hold on any machine with Omarchy 4 installed (they come from the shipped files, which the expect patterns were checked against). The two app questions are put to the projects that bench/make-fixture.sh builds in bench/fixtures (run it once before the bench). The last two entries run a script with no model.",
+  "questions": [
+    { "id": "night-light-commands", "q": "Which omarchy commands toggle the night light and restart the service behind it?", "expect": ["omarchy toggle nightlight", "omarchy restart hyprsunset"] },
+    { "id": "rebind-key", "q": "I want Super+F to open the file manager instead of what Omarchy binds it to. Which file do I edit and which function replaces a default binding?", "expect": ["bindings\\.lua", "o\\.rebind"] },
+    { "id": "lock-time", "q": "Which setting makes the screen lock after ten minutes, in which file, and what does the number mean?", "expect": ["idle\\.lock", "shell\\.json", "600", "seconds"] },
+    { "id": "stock-theme-colour", "q": "What is the accent colour of Omarchy's stock tokyo-night theme?", "expect": ["#7aa2f7"] },
+    { "id": "edit-stock-theme", "q": "I want to change a colour in the stock catppuccin theme. Can I edit it where Omarchy keeps it, and what do I do instead?", "expect": ["/usr/share/omarchy|\\$OMARCHY_PATH|replaced|overwritten", "overlay|same slug|\\.config/omarchy/themes"] },
+    { "id": "app-misses", "q": "Check the app project at bench/fixtures/clacks-broken against the Omarchy app conventions. Which files miss which convention?", "expect": ["bin/install", "main\\.cpp", "StartupWMClass", "clacks\\.svg"] },
+    { "id": "app-clean", "q": "Does the app project at bench/fixtures/clacks follow the Omarchy app conventions? Name any file that misses.", "expect": ["no miss|none|follows|passes|all\\b.*(pass|ok)|0 miss"] },
+    { "id": "app-check-shot", "do": "app-check", "params": { "path": "bench/fixtures/clacks-broken" }, "expect": ["\"check\": \"gui-application\"", "\"check\": \"desktop-wmclass\"", "\"check\": \"qml-type-name\""] },
+    { "id": "where-shot", "do": "where-to-edit", "params": { "about": "lock after ten minutes" }, "expect": ["idle, lock", "shell\\.json", "config/omarchy/shell\\.json"] }
+  ]
+}

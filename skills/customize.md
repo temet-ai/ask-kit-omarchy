@@ -1,0 +1,12 @@
+Change a user setting under ~/.config the safe way: Hyprland files, terminals, other apps, the keybinding rules
+
+1. `scripts.run("where-to-edit", { about })` gives the user file, the default, who wins and how it is applied. Never edit under `omarchy.path` (/usr/share/omarchy): the package replaces it on update. A packaged file is read, never written.
+2. Read the user file first (`omarchy.read(file)`) and the default it layers over. Say what the setting is now.
+3. Edit with `omarchy.edit(file, from, to)`. It saves `<file>.bak.<epoch>` and returns the path.
+4. Hyprland is Lua. `~/.config/hypr/hyprland.lua` loads Omarchy's defaults first, then `hypr/monitors`, `input`, `bindings`, `looknfeel` and `autostart` from the user, so the user files win. After an edit run `omarchy.hypr("reload")` (needs act) and `omarchy.hypr("configerrors")`; fix what it reports until it is empty or name the blocker.
+5. Keybindings are in `bindings.lua`: `o.bind("SUPER + SHIFT + R", "SSH", "alacritty -e ssh host")` adds one; `{ launch = "chromium" }` wraps with uwsm-app, `{ menu = "theme" }` toggles an Omarchy menu, `{ panel = "omarchy.network" }` toggles a shell panel. To replace a key that is already bound use `o.rebind(keys, description, action)` (same arguments as `o.bind`), and `hl.unbind(keys)` to remove one. Before rebinding read `omarchy.run("menu", "keybindings", "--print")` for what the key does now, and give that in the answer.
+6. Window rules go in `hyprland.lua` or a module it requires, through `o.window(match, rules)`; examples are in `omarchy.path + "/default/hypr/windows.lua"`. Rule syntax changes between Hyprland versions: the wiki page https://wiki.hypr.land/Configuring/Basics/Window-Rules/ is the reference, not memory.
+7. `hyprsunset.conf` and `xdph.conf` are read by other processes, so `configerrors` does not cover them: night light applies with `omarchy.run("restart", "hyprsunset")`, the portal config at next login.
+8. Terminals: `alacritty/alacritty.toml`, `foot/foot.ini`, `kitty/kitty.conf`, `ghostty/config`; apply with `omarchy.run("restart", "terminal")`.
+9. Reset to the shipped file only when asked: `omarchy.run("refresh", "config", "<path relative to ~/.config>")` or `refresh hyprland`, `refresh shell`. It backs up first and prints the diff; give the backup path.
+10. Reminders are a command: `omarchy.run("reminder", "15", "Pickup Jack")`; show with `reminder show`, clear with `reminder clear`.

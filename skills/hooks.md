@@ -1,0 +1,6 @@
+Hooks: scripts that run on Omarchy events
+1. Hooks live in `~/.config/omarchy/hooks/<event>.d/`, one folder per event, any number of scripts. A flat `~/.config/omarchy/hooks/<event>` file, if present, runs first. `omarchy.list(omarchy.config + "/omarchy/hooks")` shows what is installed.
+2. Events: `battery-low` (percentage in $1), `font-set` (font name in $1), `post-boot` (after the desktop starts), `post-update` (end of `omarchy update`, after privileged work), `pre-refresh-pacman` (during `omarchy refresh pacman`, after the package config is re-synced and before the transaction), `theme-set` (theme slug in $1).
+3. Install one (needs act): if the script file exists, `omarchy.run("hook", "install", "theme-set", "<path to the script>")` copies it into the event folder and marks it executable. If it does not exist yet, write it under a scratch name with `omarchy.write(omarchy.config + "/omarchy/hooks/<event>.d/<name>.sh", text)` and tell the caller to `chmod +x` it: this kit does not set file modes.
+4. A script is a bash file starting `#!/bin/bash` that reads `$1`. Update hooks run as the user with the user's PATH inside the update's sudo authorisation, so `sudo` in them does not prompt again.
+5. Test by reading: the hook's effects show in the state it changes. Do not run `omarchy hook <name>` to test unless asked: it runs every script in that folder.
