@@ -18,14 +18,18 @@ const LOG = "/var/log/pacman.log";
 
 export default async function ({ omarchy }, { updates = 3, migrations = 8, available = true } = {}) {
   const out = { version: null, channel: null };
-  const v = await omarchy.run("version");
+  const [v, ch, pkgInfo, u, pend] = await Promise.all([
+    omarchy.run("version"),
+    omarchy.run("channel", "current"),
+    // The package that holds Omarchy: `omarchy`, or `omarchy-dev` on the edge channel.
+    packageInfo(),
+    available ? omarchy.run("update", "available") : null,
+    omarchy.run("migrate", "--pending"),
+  ]);
   out.version = v.code === 0 ? v.out.trim() : null;
-  const ch = await omarchy.run("channel", "current");
   out.channel = ch.code === 0 ? ch.out.trim() : null;
   out.omarchyPath = omarchy.path;
-
-  // The package that holds Omarchy: `omarchy`, or `omarchy-dev` on the edge channel.
-  out.package = await packageInfo();
+  out.package = pkgInfo;
 
   const log = fs.existsSync(LOG) ? fs.readFileSync(LOG, "utf8").split("\n") : [];
   const upgraded = log.filter((l) => / upgraded /.test(l)).at(-1);
@@ -44,7 +48,6 @@ export default async function ({ omarchy }, { updates = 3, migrations = 8, avail
   out.upgrades = [...days.entries()].sort((a, b) => b[0].localeCompare(a[0])).slice(0, updates).map(([date, packages]) => ({ date, packages: packages.slice(0, 30), ...(packages.length > 30 ? { more: packages.length - 30 } : {}) }));
 
   if (available) {
-    const u = await omarchy.run("update", "available");
     out.update = { available: u.code === 0, lines: u.out.split("\n").filter(Boolean).slice(0, 10) };
   } else out.update = null;
 
@@ -55,7 +58,6 @@ export default async function ({ omarchy }, { updates = 3, migrations = 8, avail
   try {
     files = fs.readdirSync(dir).filter((f) => f.endsWith(".sh")).sort();
   } catch {}
-  const pend = await omarchy.run("migrate", "--pending");
   const pending = pend.code === 0 ? pend.out.split("\n").map((s) => s.trim().replace(/\.sh$/, "")).filter((s) => /^\d+$/.test(s)) : files.filter((f) => !fs.existsSync(path.join(stateDir, f))).map((f) => f.replace(/\.sh$/, ""));
   out.migrations = {
     shipped: files.length,
